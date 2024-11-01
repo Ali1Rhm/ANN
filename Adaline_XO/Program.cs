@@ -4,7 +4,7 @@
 
 List<(float[] inputs, int label)> patterns = new();
 
-foreach (var line in File.ReadLines(@"C:\Dev\ANN\Adaline_XO\XOData.txt"))
+foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData.txt"))
 {
     string[] values = line.Split(new char[] { ' ' });
 

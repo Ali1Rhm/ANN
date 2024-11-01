@@ -1,28 +1,19 @@
 ﻿using System.Text;
 
-#region Generate Letter Patterns
+#region XO Patterns
 
-List<int[][]> patterns = new();
-int[] outputs = [1, -1]; // 1 = X, -1 = O
+List<(float[] inputs, int label)> patterns = new();
 
-patterns.Add([[1, -1, -1, -1, 1], [-1, 1, -1, 1, -1], [-1, -1, 1, -1, -1], [-1, 1, -1, 1, -1], [1, -1, -1, -1, 1]]);
-patterns.Add([[-1, 1, 1, 1, -1], [+1, -1, -1, -1, +1], [+1, -1, -1, -1, +1], [+1, -1, -1, -1, +1], [-1, 1, 1, 1, -1]]);
-
-#endregion
-
-#region Visualize Letter Patterns
-
-foreach (var p in patterns)
+foreach (var line in File.ReadLines(@"C:\Dev\ANN\Adaline_XO\XOData.txt"))
 {
-    for (int i = 0; i < p.Length; i++)
-    {
-        for (int j = 0; j < p[i].Length; j++)
-        {
-            Console.Write(p[i][j] == 1 ? "# " : ". ");
-        }
-        Console.WriteLine();
-    }
-    Console.WriteLine();
+    string[] values = line.Split(new char[] { ' ' });
+
+    int label = int.Parse(values[^1]);
+    float[] inputs = new float[values.Length - 1];
+    for (int i = 0; i < inputs.Length; i++)
+        inputs[i] = float.Parse(values[i]);
+
+    patterns.Add((inputs, label));
 }
 
 #endregion
@@ -33,61 +24,56 @@ const int col = 5;
 const int row = 5;
 const int data_size = col * row;
 
-float[] w = new float[data_size], dw = new float[data_size];
-float bias = 0, dbias = 0;
-float alpha = 0.04f; // 0.1 <= n * learning rate <= 1
-float yni = 0, y = 0;
-float threshhold = 0.1f; 
+float alpha = 0.1f;
+float deltaThreshold = 0.1f;
+float[] w = new float[data_size];
+float bias = 0;
 
+float totalError = 0;
 int iteration = 0;
-bool resume = true;
+bool stop = false;
 
-while (resume)
+while (!stop)
 {
     iteration += 1;
-    resume = Adaline(iteration);
+    Adaline(ref totalError);
 }
 
-bool Adaline(int iteration = 1)
+Console.WriteLine(value: $"Number of iterations: {iteration}\n");
+Console.WriteLine($"total Error = {totalError}\n");
+
+void Adaline(ref float totalError)
 {
-    bool changed = false;
-    Console.WriteLine($"Iteration {iteration}");
+    stop = true;
 
-    foreach (var p in patterns)
+    foreach ((var inputs, var label) in patterns)
     {
-        int n = patterns.IndexOf(p);
+        float yni = 0;
 
-        for (int i = 0; i < p.Length; i++)
+        for (int i = 0; i < inputs.Length; i++)
         {
-            for (int j = 0; j < p[i].Length; j++)
-            {
-                int w_index = (col - 1) * i + j;
-                yni += w[w_index] * p[i][j];
-            }
+            yni += w[i] * inputs[i];
         }
-
         yni += bias;
 
-        for (int i = 0; i < p.Length; i++)
-        {
-            for (int j = 0; j < p[i].Length; j++)
-            {
-                int w_index = (col - 1) * i + j;
-                dw[w_index] = alpha * (outputs[n] - yni) * p[i][j];
-                w[w_index] += dw[w_index];
+        float error = label - yni;
+        totalError += error * error;
+        int prediction = StepFunction(yni, 0f);
 
-                if (dw[w_index] >= threshhold)
-                {
-                    changed = true;
-                }
-            }
+        if (prediction == label)
+            continue;
+
+        for (int i = 0; i < inputs.Length; i++)
+        {
+            float dw = alpha * error * inputs[i];
+            w[i] += dw;
+
+            if (dw > deltaThreshold)
+                stop = false;
         }
 
-        dbias = alpha * (outputs[n] - yni) * 1;
-        bias += dbias;
+        bias += alpha * error * 1;
     }
-
-    return changed;
 }
 
 #endregion
@@ -103,6 +89,56 @@ for (int i = 0; i < data_size; i++)
 
 equataion_string.Append($"{bias}");
 
-Console.WriteLine(equataion_string);
+Console.WriteLine(equataion_string + "\n");
+
+#endregion
+
+#region Test
+
+foreach ((var inputs, var label) in patterns)
+{
+    float yni = 0;
+    int prediction;
+
+    for (int i = 0; i < inputs.Length; i++)
+    {
+        yni += w[i] * inputs[i];
+    }
+    yni += bias;
+
+    prediction = StepFunction(yni, 0.2f);
+
+    DrawLetter(inputs);
+
+    if (prediction == 1)
+        Console.WriteLine("X");
+    else if (prediction == -1)
+        Console.WriteLine("O");
+    else
+        Console.WriteLine("Not Defined");
+
+    Console.WriteLine();
+}
+
+static int StepFunction(float yni, float theta)
+{
+    return yni <= theta && yni >= -theta ? 0 : (yni > theta ? 1 : -1);
+}
+
+#endregion
+
+#region Visualize Letters
+
+static void DrawLetter(float[] letter)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        for (int j = 0; j < 5; j++)
+        {
+            Console.Write(letter[5 * i + j] == 1 ? "# " : ". ");
+        }
+        Console.WriteLine();
+    }
+}
 
 #endregion

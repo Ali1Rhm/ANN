@@ -1,28 +1,19 @@
 ﻿using System.Text;
 
-#region Generate Letter Patterns
+#region XO Patterns
 
-List<int[][]> patterns = new();
-int[] outputs = [1, -1]; // 1 = X, -1 = O
+List<(float[] inputs, int label)> patterns = new();
 
-patterns.Add([[1, -1, -1, -1, 1], [-1, 1, -1, 1, -1], [-1, -1, 1, -1, -1], [-1, 1, -1, 1, -1], [1, -1, -1, -1, 1]]);
-patterns.Add([[-1, 1, 1, 1, -1], [+1, -1, -1, -1, +1], [+1, -1, -1, -1, +1], [+1, -1, -1, -1, +1], [-1, 1, 1, 1, -1]]);
-
-#endregion
-
-#region Visualize Letter Patterns
-
-foreach (var p in patterns)
+foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData.txt"))
 {
-    for(int i = 0; i < p.Length; i++)
-    {
-        for(int j = 0; j < p[i].Length; j++)
-        {
-            Console.Write(p[i][j] == 1 ? "# " : ". ");
-        }
-        Console.WriteLine();
-    }
-    Console.WriteLine();
+    string[] values = line.Split(new char[] { ' ' });
+
+    int label = int.Parse(values[^1]);
+    float[] inputs = new float[values.Length - 1];
+    for (int i = 0; i < inputs.Length; i++)
+        inputs[i] = float.Parse(values[i]);
+
+    patterns.Add((inputs, label));
 }
 
 #endregion
@@ -33,25 +24,20 @@ const int col = 5;
 const int row = 5;
 const int data_size = col * row;
 
-int[] weights = new int[data_size], dweights = new int[data_size];
-int bias = 0, dbias;
+float[] w = new float[data_size];
+float bias = 0;
 
-foreach (var p in patterns)
+foreach ((var inputs, var label) in patterns)
 {
-    int n = patterns.IndexOf(p);
+    for (int i = 0; i < inputs.Length; i++)
+        w[i] += inputs[i] * label;
 
-    for (int i = 0; i < p.Length; i++)
-    {
-        for (int j = 0; j < p[i].Length; j++)
-        {
-            int w_index = (col - 1) * i + j;
-            dweights[w_index] = p[i][j] * outputs[n];
-            weights[w_index] += dweights[w_index];
-        }
-    }
+    bias += 1 * label;
+}
 
-    dbias = 1 * outputs[n];
-    bias += dbias;
+static int StepFunction(float yni, float theta)
+{
+    return yni <= theta && yni >= -theta ? 0 : (yni > theta ? 1 : -1);
 }
 
 #endregion
@@ -62,11 +48,49 @@ StringBuilder equataion_string = new();
 
 for (int i = 0; i < data_size; i++)
 {
-    equataion_string.Append($"{weights[i]}x{i} + ");
+    equataion_string.Append($"{w[i]}x{i} + ");
 }
 
 equataion_string.Append($"{bias}");
 
-Console.WriteLine(equataion_string);
+Console.WriteLine(equataion_string + "\n");
+
+#endregion
+
+#region Test
+
+foreach ((var inputs, var label) in patterns)
+{
+    float yni = 0;
+    int prediction;
+
+    for (int i = 0; i < inputs.Length; i++)
+    {
+        yni += w[i] * inputs[i];
+    }
+    yni += bias;
+
+    prediction = StepFunction(yni, 0.2f);
+
+    DrawLetter(inputs);
+
+    Console.WriteLine((prediction == 0 ? "Not Defined" : (prediction == 1) ? "X" : "O") + "\n");
+}
+
+#endregion
+
+#region Visualize Letters
+
+static void DrawLetter(float[] letter)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        for (int j = 0; j < 5; j++)
+        {
+            Console.Write(letter[5 * i + j] == 1 ? "# " : ". ");
+        }
+        Console.WriteLine();
+    }
+}
 
 #endregion

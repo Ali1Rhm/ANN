@@ -1,29 +1,19 @@
 ﻿using System.Text;
 
-#region Generate Letter Patterns
+#region XO Patterns
 
-List<int[][]> patterns = new();
-int[] x_outputs = [1, -1]; // 1 = X, -1 = O
-int[] o_outputs = [-1, 1]; // 1 = O, -1 = X
+List<(float[] inputs, int x_label, int o_label)> patterns = new();
 
-patterns.Add([[1, -1, -1, -1, 1], [-1, 1, -1, 1, -1], [-1, -1, 1, -1, -1], [-1, 1, -1, 1, -1], [1, -1, -1, -1, 1]]);
-patterns.Add([[-1, 1, 1, 1, -1], [+1, -1, -1, -1, +1], [+1, -1, -1, -1, +1], [+1, -1, -1, -1, +1], [-1, 1, 1, 1, -1]]);
-
-#endregion
-
-#region Visualize Letter Patterns
-
-foreach (var p in patterns)
+foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData.txt"))
 {
-    for (int i = 0; i < p.Length; i++)
-    {
-        for (int j = 0; j < p[i].Length; j++)
-        {
-            Console.Write(p[i][j] == 1 ? "# " : ". ");
-        }
-        Console.WriteLine();
-    }
-    Console.WriteLine();
+    string[] values = line.Split(new char[] { ' ' });
+
+    int label = int.Parse(values[^1]);
+    float[] inputs = new float[values.Length - 1];
+    for (int i = 0; i < inputs.Length; i++)
+        inputs[i] = float.Parse(values[i]);
+
+    patterns.Add((inputs, label, -label));
 }
 
 #endregion
@@ -34,99 +24,71 @@ const int col = 5;
 const int row = 5;
 const int data_size = col * row;
 
-float[] x_w = new float[data_size], x_dw = new float[data_size];
-float x_bias = 0, x_dbias = 0;
+float[] x_w = new float[data_size];
+float x_bias = 0;
 
-float[] o_w = new float[data_size], o_dw = new float[data_size];
-float o_bias = 0, o_dbias = 0;
+float[] o_w = new float[data_size];
+float o_bias = 0;
 
-float alpha = 1f; // 0 < learning rate <= 1
-float theta = 0f;
-
-float x_yni = 0, o_yni = 0, x_y = 0, o_y = 0;
+float alpha = 0.1f;
+float theta = 0.2f;
 
 int iteration = 0;
-bool resume = true;
+bool stop = false;
 
-while (resume)
+while (!stop)
 {
     iteration += 1;
-    resume = Perceptron(iteration);
+    Perceptron(iteration);
 }
 
-bool Perceptron(int iteration = 1)
+Console.WriteLine(value: $"Number of iterations: {iteration}\n");
+
+void Perceptron(int iteration = 1)
 {
-    bool changed = false;
-    Console.WriteLine($"Iteration {iteration}");
+    stop = true;
 
-    foreach (var p in patterns)
+    foreach ((var inputs, var x_label, var o_label) in patterns)
     {
-        int n = patterns.IndexOf(p);
+        float x_yni = 0, o_yni = 0;
 
-        for (int i = 0; i < p.Length; i++)
+        for (int i = 0; i < inputs.Length; i++)
         {
-            for (int j = 0; j < p[i].Length; j++)
-            {
-                int w_index = (col - 1) * i + j;
-                x_yni += x_w[w_index] * p[i][j];
-                o_yni += o_w[w_index] * p[i][j];
-            }
+            x_yni += x_w[i] * inputs[i];
+            o_yni += o_w[i] * inputs[i];
         }
-
         x_yni += x_bias;
-        x_y = x_yni <= theta && x_yni >= -theta ? 0 : (x_yni > theta ? 1 : -1);
-
         o_yni += o_bias;
-        o_y = o_yni <= theta && o_yni >= -theta ? 0 : (o_yni > theta ? 1 : -1);
 
-        if (x_y != x_outputs[n])
+        int x_prediction = StepFunction(x_yni, theta);
+        int o_prediction = StepFunction(o_yni, theta);
+
+        if (x_prediction != x_label)
         {
-            if (!changed) changed = true;
+            stop = false;
 
-            for (int i = 0; i < p.Length; i++)
-            {
-                for (int j = 0; j < p[i].Length; j++)
-                {
-                    int w_index = (col - 1) * i + j;
-                    x_dw[w_index] = alpha * p[i][j] * x_outputs[n];
-                    x_w[w_index] += x_dw[w_index];
-                }
-            }
+            for (int i = 0; i < inputs.Length; i++)
+                x_w[i] += alpha * inputs[i] * x_label;
 
-            x_dbias = alpha * 1 * x_outputs[n];
-            x_bias += x_dbias;
-        }
-        else
-        {
-            x_dw[0] = x_dw[1] = x_dbias = 0;
+            x_bias += alpha * 1 * x_label;
         }
 
-        if (o_y != o_outputs[n])
+        if (o_prediction != o_label)
         {
-            if (!changed) changed = true;
+            stop = false;
 
-            for (int i = 0; i < p.Length; i++)
-            {
-                for (int j = 0; j < p[i].Length; j++)
-                {
-                    int w_index = 4 * i + j;
-                    o_dw[w_index] = alpha * p[i][j] * o_outputs[n];
-                    o_w[w_index] += o_dw[w_index];
-                }
-            }
+            for (int i = 0; i < inputs.Length; i++)
+                o_w[i] += alpha * inputs[i] * o_label;
 
-            o_dbias = alpha * 1 * o_outputs[n];
-            o_bias += o_dbias;
-        }
-        else
-        {
-            o_dw[0] = o_dw[1] = o_dbias = 0;
+            o_bias += alpha * 1 * o_label;
         }
     }
-
-    return changed;
 }
 
+static int StepFunction(float yni, float theta)
+{
+    return yni <= theta && yni >= -theta ? 0 : (yni > theta ? 1 : -1);
+}
 #endregion
 
 #region Print Final Equataion
@@ -143,7 +105,48 @@ for (int i = 0; i < data_size; i++)
 x_equataion_string.Append($"{x_bias}");
 o_equataion_string.Append($"{o_bias}");
 
-Console.WriteLine(x_equataion_string);
-Console.WriteLine(o_equataion_string);
+Console.WriteLine(x_equataion_string+"\n");
+Console.WriteLine(o_equataion_string+"\n");
+
+#endregion
+
+#region Test
+
+foreach ((var inputs, var x_label, var o_label) in patterns)
+{
+    float x_yni = 0, o_yni = 0;
+        
+    for (int i = 0; i < inputs.Length; i++)
+    {
+        x_yni += x_w[i] * inputs[i];
+        o_yni += o_w[i] * inputs[i];
+    }
+    x_yni += x_bias;
+    o_yni += o_bias;
+
+    int x_prediction = StepFunction(x_yni, theta);
+    int o_prediction = StepFunction(o_yni, theta);
+
+    DrawLetter(inputs);
+
+    Console.WriteLine(x_prediction == 0 ? "Not Defined (in X class)" : (x_prediction == 1) ? "X (in X class)" : "O (in X class)");
+    Console.WriteLine((x_prediction == 0 ? "Not Defined (in O class)" : (o_prediction == 1) ? "O (in O class)" : "X (in O class)") + "\n");
+}
+
+#endregion
+
+#region Visualize Letters
+
+static void DrawLetter(float[] letter)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        for (int j = 0; j < 5; j++)
+        {
+            Console.Write(letter[5 * i + j] == 1 ? "# " : ". ");
+        }
+        Console.WriteLine();
+    }
+}
 
 #endregion

@@ -76,6 +76,11 @@ void Adaline(ref float totalError)
     }
 }
 
+static int StepFunction(float yni, float theta)
+{
+    return yni <= theta && yni >= -theta ? 0 : (yni > theta ? 1 : -1);
+}
+
 #endregion
 
 #region Print Final Equataion
@@ -110,19 +115,7 @@ foreach ((var inputs, var label) in patterns)
 
     DrawLetter(inputs);
 
-    if (prediction == 1)
-        Console.WriteLine("X");
-    else if (prediction == -1)
-        Console.WriteLine("O");
-    else
-        Console.WriteLine("Not Defined");
-
-    Console.WriteLine();
-}
-
-static int StepFunction(float yni, float theta)
-{
-    return yni <= theta && yni >= -theta ? 0 : (yni > theta ? 1 : -1);
+    Console.WriteLine((prediction == 0 ? "Not Defined" : (prediction == 1) ? "X" : "O") + "\n");
 }
 
 #endregion

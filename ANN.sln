@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perceptron_XO", "Perceptron
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perceptron(Multi-Category)_XO", "Perceptron(Multi-Category)_XO\Perceptron(Multi-Category)_XO.csproj", "{21911C4E-AFDB-4E1D-95EB-01629AA26C86}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Adaline_XO", "Adaline_XO\Adaline_XO.csproj", "{7BAEB8B7-82C7-4ED0-9872-4D8105353A7A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaline_XO", "Adaline_XO\Adaline_XO.csproj", "{7BAEB8B7-82C7-4ED0-9872-4D8105353A7A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MLP_XO", "MLP_XO\MLP_XO.csproj", "{D85D424D-6B76-47C7-B0F7-25C0D903A6B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{7BAEB8B7-82C7-4ED0-9872-4D8105353A7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7BAEB8B7-82C7-4ED0-9872-4D8105353A7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7BAEB8B7-82C7-4ED0-9872-4D8105353A7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D85D424D-6B76-47C7-B0F7-25C0D903A6B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D85D424D-6B76-47C7-B0F7-25C0D903A6B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D85D424D-6B76-47C7-B0F7-25C0D903A6B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D85D424D-6B76-47C7-B0F7-25C0D903A6B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

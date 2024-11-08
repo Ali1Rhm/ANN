@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json.Serialization.Metadata;
 
 #region XO Patterns
 
@@ -16,6 +17,13 @@ foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData10Train.txt"))
         inputs[i] = float.Parse(values[i]);
 
     train_patterns.Add((inputs, label));
+}
+
+for (int i = 0; i < 200; i ++)
+{
+    var current = train_patterns[i + 1];
+    train_patterns[i + 1] = train_patterns[i + 200];
+    train_patterns[i + 200] = current;
 }
 
 foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData10Test.txt"))
@@ -39,7 +47,7 @@ const int row = 10;
 const int data_size = col * row;
 
 float alpha = 0.01f;
-float deltaThreshold = 0.01f;
+float deltaThreshold = 0.001f;
 float[] w = new float[data_size];
 float bias = 0;
 float theta = 0f;

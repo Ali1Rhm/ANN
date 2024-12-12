@@ -1,9 +1,9 @@
-﻿using System.Text;
+﻿#region XO Patterns
 
-#region XO Patterns
+List<(float[] input, int label)> train_patterns = new();
+List<(float[] input, int label)> test_patterns = new();
 
-List<(float[] inputs, int label)> patterns = new();
-foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData.txt"))
+foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData10Train.txt"))
 {
     string[] values = line.Split(new char[] { ' ' });
 
@@ -12,211 +12,214 @@ foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData.txt"))
     for (int i = 0; i < inputs.Length; i++)
         inputs[i] = float.Parse(values[i]);
 
-    patterns.Add((inputs, label));
+    train_patterns.Add((inputs, label));
+}
+
+foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData10Test.txt"))
+{
+    string[] values = line.Split(new char[] { ' ' });
+
+    int label = int.Parse(values[^1]);
+    float[] inputs = new float[values.Length - 1];
+    for (int i = 0; i < inputs.Length; i++)
+        inputs[i] = float.Parse(values[i]);
+
+    test_patterns.Add((inputs, label));
 }
 
 #endregion
 
-const int col = 5;
-const int row = 5;
-int data_size = col * row;
-
-const int z_neurons_count = 1;
-const int y_neurons_count = z_neurons_count;
-
+int input_size = 100;
+int[] layers_size = {100, 1};
 float alpha = 0.01f;
+int epoch = 100;
 
-float[,] z_weights = new float[z_neurons_count, data_size];
-float[,] y_weights =  new float[y_neurons_count, data_size];
-
-float[,] z_dweights = new float[z_neurons_count, data_size];
-float[,] y_dweights = new float[y_neurons_count, data_size];
-
-float[] z_bias = new float[z_neurons_count];
-float[] y_bias = new float[y_neurons_count];
-
-float[] z_dbias = new float[z_neurons_count];
-float[] y_dbias = new float[y_neurons_count];
-
-float[] z_yni = new float[z_neurons_count];
-float[] y_yni = new float[y_neurons_count];
-
-float[] z_fy = new float[z_neurons_count];
-float[] y_fy = new float[y_neurons_count];
-
-float[] z_error = new float[z_neurons_count];
-float[] y_error = new float[y_neurons_count];
-
-float[] z_prev_error = new float[z_neurons_count];
-float[] y_prev_error = new float[y_neurons_count];
-
-AssignRandomValues(ref z_bias, ref z_weights, 0.1f);
-AssignRandomValues(ref y_bias, ref y_weights, 0.1f);
-
-int iteration = 0;
-bool stop = false; 
-
-while (!stop)
+List<List<Neuron>> layers = new();
+for (int i = 0; i < layers_size.Length; i++)
 {
-    iteration += 1;
-    MLP();
+    var layer = new List<Neuron>();
+    int weights_count = i == 0 ? input_size : layers_size[i - 1];
+
+    for (int j = 0; j < layers_size[i]; j++)
+    {
+        layer.Add(new Neuron(weights_count));
+    }
+
+    layers.Add(layer);
 }
 
-WriteLine($"Number of iterations = {iteration}");
+int iteration = 0;
+bool stop = false;
+while (!stop && iteration < epoch)
+{
+    iteration += 1;
+    MLP(iteration);
+}
 
-void MLP()
+WriteLine(value: $"Number of iterations: {iteration}\n");
+
+void MLP(int iteration = 1)
 {
     stop = true;
 
-    foreach ((var inputs, var label) in patterns)
-    {
-        int i = 0;
-        while (i < z_neurons_count)
+    foreach (var pattern in train_patterns)
+    { 
+        for (int i =  0; i < layers.Count; i++)
         {
-            z_yni[i] = 0;
-            for (int j = 0; j < inputs.Length; j++)
-                z_yni[i] += z_weights[i, j] * inputs[j];
-            z_yni[i] += z_bias[i];
-
-            z_fy[i] = SigmoidFunction(z_yni[i]);
-
-            i++;
-        }
-
-        i = 0;
-        while (i < y_neurons_count)
-        {
-            y_yni[i] = 0;
-            for (int j = 0; j < z_fy.Length; j++)
-                y_yni[j] += y_weights[i, j] * z_fy[j];
-            y_yni[i] += y_bias[i];
-
-            y_fy[i] = SigmoidFunction(y_yni[i]);
-
-            y_error[i] = (label - y_fy[i]) * DifferentiatedSigmoidFunction(y_yni[i]);
-
-            if (iteration == 1 || MathF.Abs(y_error[i]) < MathF.Abs(y_prev_error[i]))
+            foreach (var neuron in layers[i])
             {
-                stop = false;
-                y_prev_error[i] = y_error[i];
+                float yni = 0;
+                float fy = 0;
+                float delta = 0;
+
+                for (int j = 0; j < neuron.weights!.Length; j++)
+                {
+                    yni += neuron.weights![j] * (i == 0 ? pattern.input[j] : layers[i - 1][j].value);
+                }
+                yni += neuron.bias;
+
+                fy = SigmoidFunction(yni);
+                delta = (pattern.label - fy) * DifferentiatedSigmoidFunction(yni);
+
+                if (i == layers.Count - 1)
+                {
+                    for (int j = 0; j < neuron.d_weights!.Length; j++)
+                    {
+                        neuron.d_weights[j] = alpha * delta * layers[i - 1][j].value;
+                    }
+                    neuron.d_bias = alpha * delta;
+                }
+
+                neuron.net_input = yni;
+                neuron.value = fy;
+                neuron.delta = delta;
             }
-
-            for (int j = 0; j < z_fy.Length; j++)
-                y_dweights[i, j] = alpha * y_error[i] * z_fy[j];
-            y_dbias[i] = alpha * y_error[i];
-
-            i++;
         }
 
-        i = 0;
-        while (i < z_neurons_count)
+        for (int i = layers.Count - 1; i >= 0; i--)
         {
-            float d = 0;
-            for (int j = 0; j < y_error.Length; j++)
-                d += y_error[j] * y_weights[i, j];
-
-            z_error[i] = d * DifferentiatedSigmoidFunction(z_yni[i]);
-
-            if (iteration == 1 || MathF.Abs(z_error[i]) < MathF.Abs(z_prev_error[i]))
+            foreach (var neuron in layers[i])
             {
-                stop = false;
-                z_prev_error[i] = z_error[i];
+                if (i == layers.Count - 1)
+                {
+                    for (int j = 0; j < neuron.weights!.Length; j++)
+                    {
+                        neuron.weights[j] += neuron.d_weights[j];
+                    }
+                    neuron.bias += neuron.d_bias;
+                }
+                else
+                {
+                    float D = 0;
+                    float error = 0;
+                    int neuron_index = layers[i].IndexOf(neuron);
+
+                    for (int j = 0; j < layers[i + 1].Count; j++)
+                    {
+                        D += layers[i + 1][j].weights![neuron_index] * layers[i + 1][j].delta;
+                    }
+
+                    error = D * DifferentiatedSigmoidFunction(neuron.net_input);
+
+                    if (iteration == 1 || MathF.Abs(error) < MathF.Abs(neuron.error))
+                    {
+                        stop = false;
+                        neuron.error = error;
+                    }
+
+                    for (int j = 0; j < neuron.weights!.Length; j++)
+                    {
+                        neuron.d_weights[j] = alpha * error * (i == 0 ? pattern.input[j] : layers[i - 1][j].value);
+                        neuron.weights![j] += neuron.d_weights[j];
+                    }
+                    neuron.d_bias = alpha * error;
+                    neuron.bias += neuron.d_bias;
+                }
             }
-
-
-            for (int j = 0; j < inputs.Length; j++)
-                z_dweights[i, j] = alpha * z_error[i] * inputs[j];
-            z_dbias[i] = alpha * z_error[i];
-
-            i++;
-        }
-
-        i = 0;
-        while (i < y_neurons_count)
-        {
-            for (int j = 0; j < z_fy.Length; j++)
-                y_weights[i, j] += y_dweights[i, j];
-
-            y_bias[i] += y_dbias[i];
-
-            i++;
-        }
-
-        i = 0;
-        while (i < z_neurons_count)
-        {
-            for (int j = 0; j < inputs.Length; j++)
-                z_weights[i, j] += z_dweights[i, j];
-
-            z_bias[i] += z_dbias[i];
-
-            i++;
         }
     }
 }
 
-static float SigmoidFunction(float yni)
+float SigmoidFunction(float yni)
 {
     return 2f * (1f / (1f + MathF.Pow(MathF.E, -yni))) - 1f;
 }
 
-static float DifferentiatedSigmoidFunction(float yni)
+float DifferentiatedSigmoidFunction(float yni)
 {
     return 0.5f * (1 + SigmoidFunction(yni)) * (1 - SigmoidFunction(yni));
 }
 
-static void AssignRandomValues(ref float[] data1D, ref float[,] data2D, float scale)
+static int StepFunction(float yni, float theta)
 {
-    var rand = Random.Shared;
-
-    if (data1D != null)
-    {
-        for (int i = 0; i < data1D.Length; i++)
-            data1D[i] = (2 * rand.NextSingle() - 1) * scale;
-    }
-
-    if (data2D != null)
-    {
-        for (int i = 0; i < data2D.GetLength(0); i++)
-            for (int j = 0; j < data2D.GetLength(1); j++)
-                data2D[i, j] = (2 * rand.NextSingle() - 1) * scale;
-    }
+    return yni <= theta && yni >= -theta ? 0 : (yni > theta ? 1 : -1);
 }
-
-#region Print Final Equataion
-
-StringBuilder equataion_string = new();
-
-for (int i = 0; i < y_weights.GetLength(1); i++)
-{
-    equataion_string.Append($"{y_weights[0, i]}x{i} + ");
-}
-
-equataion_string.Append($"{y_bias[0]}");
-
-WriteLine(equataion_string + "\n");
-
-#endregion
 
 #region Test
 
-foreach ((var inputs, var label) in patterns)
+int truePositive = 0;
+int trueNegative = 0;
+int falsePositive = 0;
+int falseNegative = 0;
+
+foreach ((var input, var label) in test_patterns)
 {
-    float yni = 0;
-    float prediction;
+    float prediction = 0;
 
-    for (int i = 0; i < inputs.Length; i++)
+    foreach (var layer in layers)
     {
-        yni += y_weights[0, i] * inputs[i];
+        int layer_index = layers.IndexOf(layer);
+
+        foreach (var neuron in layer)
+        {
+            float yni = 0;
+            float fy = 0;
+
+            for (int i = 0; i < neuron.weights!.Length; i++)
+            {
+                yni += neuron.weights![i] * (layer_index == 0 ? input[i] : layers[layer_index - 1][i].value);
+            }
+            yni += neuron.bias;
+
+            fy = SigmoidFunction(yni);
+            neuron.value = fy;
+
+            if (layer_index == layers.Count - 1)
+                prediction = fy;
+        }
     }
-    yni += y_bias[0];
 
-    prediction = SigmoidFunction(yni);
+    prediction = StepFunction(prediction, 0f);
 
-    DrawLetter(inputs);
+    if (prediction == label && label == 1)
+        truePositive++;
+    else if (prediction == label && label == -1)
+        trueNegative++;
+    else if (prediction != label && label == 1)
+        falseNegative++;
+    else if (prediction != label && label == -1)
+        falsePositive++;
 
-    Console.WriteLine((prediction == 0 ? "Not Defined" : (prediction > 0) ? "X" : "O") + "\n");
+    DrawLetter(input);
+    WriteLine((prediction == 0 ? "Not Defined" : (prediction > 0) ? "X" : "O") + "\n");
 }
+
+double precision = truePositive / (double)(truePositive + falsePositive);
+double recall = truePositive / (double)(truePositive + falseNegative);
+double accuracy = (truePositive + trueNegative) / (double)(truePositive + trueNegative + falsePositive + falseNegative);
+double f1Score = 2 * (precision * recall) / (precision + recall);
+
+// Print the confusion matrix and metrics
+WriteLine("Confusion Matrix:");
+WriteLine($"                 Predicted X   Predicted O");
+WriteLine($"Actual X         {truePositive}            {falseNegative}");
+WriteLine($"Actual O         {falsePositive}            {trueNegative}\n");
+
+WriteLine("Metrics:");
+WriteLine($"Accuracy : {accuracy:P2}");
+WriteLine($"Precision: {precision:P2}");
+WriteLine($"Recall   : {recall:P2}");
+WriteLine($"F1 Score : {f1Score:P2}");
 
 #endregion
 
@@ -224,14 +227,45 @@ foreach ((var inputs, var label) in patterns)
 
 static void DrawLetter(float[] letter)
 {
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 10; i++)
     {
-        for (int j = 0; j < 5; j++)
+        for (int j = 0; j < 10; j++)
         {
-            Console.Write(letter[5 * i + j] == 1 ? "# " : ". ");
+            Write(letter[10 * i + j] == 1 ? "# " : ". ");
         }
-        Console.WriteLine();
+        WriteLine();
     }
 }
 
 #endregion
+
+class Neuron
+{
+    public float[]? weights;
+    public float[] d_weights;
+    public float bias;
+    public float d_bias;
+    public float value;
+    public float net_input;
+    public float delta;
+    public float error;
+
+    public Neuron(int weights_count)
+    {
+        float[] random_values = GenerateRandomValues(0.1f, weights_count + 1);
+        weights = random_values[..^1];
+        d_weights = new float[weights_count];
+        bias = random_values[^1];
+    }
+
+    float[] GenerateRandomValues(float scale, int count)
+    {
+        var rand = Random.Shared;
+        float[] values = new float[count];
+
+        for (int i = 0; i < values.Length; i++)
+            values[i] = (2 * rand.NextSingle() - 1) * scale;
+
+        return values;
+    }
+}

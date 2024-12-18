@@ -8,11 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MLP_Base\MLP_Base.csproj" />
+    <PackageReference Include="EPPlus" Version="7.5.2" />
   </ItemGroup>
 
-	<ItemGroup>
-		<Using Static="true" Include="System.Console" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MLP_Base\MLP_Base.csproj" />
+	  <Using Static="true" Include="System.Console" />
+  </ItemGroup>
 	
 </Project>

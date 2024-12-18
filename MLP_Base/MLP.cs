@@ -6,13 +6,12 @@
         private int[] layers_size = { 100, 1 };
         private float alpha = 0.01f;
         private int max_epoch = 100;
-        private List<(float[] input, int[] label)> train_patterns = new();
+        private List<(float[] input, float[] label)> train_patterns = new();
         private List<List<Neuron>> layers = new();
 
         private int iteration = 0;
-        private bool stop = false;
 
-        public MLP(int input_size, int[] layers_size, float alpha, int max_epoch, List<(float[] input, int[] label)> train_patterns)
+        public MLP(int input_size, int[] layers_size, float alpha, int max_epoch, List<(float[] input, float[] label)> train_patterns)
         {
             this.input_size = input_size;
             this.layers_size = layers_size;
@@ -37,7 +36,7 @@
                 layers.Add(layer);
             }
 
-            while (!stop && iteration < max_epoch)
+            while (iteration < max_epoch)
             {
                 iteration += 1;
                 Train();
@@ -47,9 +46,7 @@
         }
 
         private void Train()
-        {
-            stop = true;
-        
+        {        
             foreach (var pattern in train_patterns)
             {
                 for (int i = 0; i < layers.Count; i++)
@@ -105,16 +102,10 @@
         
                             for (int j = 0; j < layers[i + 1].Count; j++)
                             {
-                                D += layers[i + 1][j].weights![neuron_index] * layers[i + 1][j].delta;
+                                D += layers[i + 1][j].weights![neuron_index] * (i + 1 == layers.Count - 1 ? layers[i + 1][j].delta : layers[i + 1][j].error);
                             }
         
                             error = D * DifferentiatedSigmoidFunction(neuron.net_input);
-        
-                            if (iteration == 1 || MathF.Abs(error) < MathF.Abs(neuron.error))
-                            {
-                                stop = false;
-                                neuron.error = error;
-                            }
         
                             for (int j = 0; j < neuron.weights!.Length; j++)
                             {
@@ -159,16 +150,18 @@
             return predictions;
         }
         
-        private float SigmoidFunction(float yni)
+        private float SigmoidFunction(float value)
         {
-            return 2f * (1f / (1f + MathF.Pow(MathF.E, -yni))) - 1f;
+            return 2.0f * (1.0f / (1.0f + (float) Math.Exp(-value))) - 1.0f;
         }
         
-        private float DifferentiatedSigmoidFunction(float yni)
+        private float DifferentiatedSigmoidFunction(float value)
         {
-            return 0.5f * (1 + SigmoidFunction(yni)) * (1 - SigmoidFunction(yni));
+            float k = MathF.Exp(-value);
+            return (2.0f * k) / MathF.Pow(k + 1, 2);
         }
-        
+
+
         public static int StepFunction(float yni, float theta)
         {
             return yni <= theta && yni >= -theta ? 0 : (yni > theta ? 1 : -1);
@@ -188,7 +181,7 @@
 
         public Neuron(int weights_count)
         {
-            float[] random_values = GenerateRandomValues(0.1f, weights_count + 1);
+            float[] random_values = GenerateRandomValues(1f, weights_count + 1);
             weights = random_values[..^1];
             d_weights = new float[weights_count];
             bias = random_values[^1];

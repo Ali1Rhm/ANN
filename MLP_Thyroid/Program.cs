@@ -5,7 +5,7 @@ ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 string featuresPath = @"C:\Dev\ANN\thyroidInputs.xlsx";
 string labelsPath = @"C:\Dev\ANN\thyroidTargets.xlsx";
-List<(float[] input, int[] label)> train_patterns = new();
+List<(float[] input, float[] label)> train_patterns = new();
 
 // Load features
 using (var featurePackage = new ExcelPackage(new FileInfo(featuresPath)))
@@ -17,7 +17,7 @@ using (var labelPackage = new ExcelPackage(new FileInfo(labelsPath)))
     int rows = featureSheet.Dimension.Rows;
     int cols = featureSheet.Dimension.Columns;
 
-    List<int[]> labels = new();
+    List<float[]> labels = new();
     for (int i = 1; i <= cols; i++)
     {
         labels.Add([
@@ -65,7 +65,7 @@ int[] actualLabels = new int[train_patterns.Count];
 int[] predictedLabels = new int[train_patterns.Count];
 int index = 0;
 
-foreach ((var input, int[] label) in train_patterns)
+foreach ((var input, var label) in train_patterns)
 {
     int label_index = label[0] == 1 ? 0 : (label[1] == 1 ? 1 : 2);
 

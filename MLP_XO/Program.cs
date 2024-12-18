@@ -2,14 +2,14 @@
 #region XO Patterns
 
 
-List<(float[] input, int[] label)> train_patterns = new();
-List<(float[] input, int[] label)> test_patterns = new();
+List<(float[] input, float[] label)> train_patterns = new();
+List<(float[] input, float[] label)> test_patterns = new();
 
 foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData10Train.txt"))
 {
     string[] values = line.Split(new char[] { ' ' });
 
-    int[] label = [int.Parse(values[^1])];
+    float[] label = [int.Parse(values[^1])];
     float[] inputs = new float[values.Length - 1];
     for (int i = 0; i < inputs.Length; i++)
         inputs[i] = float.Parse(values[i]);
@@ -21,7 +21,7 @@ foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData10Test.txt"))
 {
     string[] values = line.Split(new char[] { ' ' });
 
-    int[] label = [int.Parse(values[^1])];
+    float[] label = [int.Parse(values[^1])];
     float[] inputs = new float[values.Length - 1];
     for (int i = 0; i < inputs.Length; i++)
         inputs[i] = float.Parse(values[i]);
@@ -33,7 +33,7 @@ foreach (var line in File.ReadLines(@"C:\Dev\ANN\XOData10Test.txt"))
 
 int input_size = 100;
 int[] layers_size = { 100, 1 };
-float alpha = 0.01f;
+float alpha = 0.001f;
 int max_epoch = 100;
 
 MLP mlp = new(input_size, layers_size, alpha, max_epoch, train_patterns);

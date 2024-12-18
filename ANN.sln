@@ -17,9 +17,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Adaline_XO", "Adaline_XO\Ad
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MLP_XO", "MLP_XO\MLP_XO.csproj", "{D85D424D-6B76-47C7-B0F7-25C0D903A6B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MLP_Thyroid", "MLP_Thyroid\MLP_Thyroid.csproj", "{C9537CE8-9C11-4432-B9CB-D336048414C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MLP_Thyroid", "MLP_Thyroid\MLP_Thyroid.csproj", "{C9537CE8-9C11-4432-B9CB-D336048414C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MLP_Base", "MLP_Base\MLP_Base.csproj", "{7216665F-8BB9-456E-85DA-6E2F11DBC946}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MLP_Base", "MLP_Base\MLP_Base.csproj", "{7216665F-8BB9-456E-85DA-6E2F11DBC946}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MLP_Sinusoid", "MLP_Sinusoid\MLP_Sinusoid.csproj", "{4BCA3981-17D7-44B3-9B35-2FEBF541E728}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{7216665F-8BB9-456E-85DA-6E2F11DBC946}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7216665F-8BB9-456E-85DA-6E2F11DBC946}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7216665F-8BB9-456E-85DA-6E2F11DBC946}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BCA3981-17D7-44B3-9B35-2FEBF541E728}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BCA3981-17D7-44B3-9B35-2FEBF541E728}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BCA3981-17D7-44B3-9B35-2FEBF541E728}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BCA3981-17D7-44B3-9B35-2FEBF541E728}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

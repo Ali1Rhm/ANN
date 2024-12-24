@@ -6,13 +6,11 @@
         private int features_count = 4;
         private int clusters_count = 2;
         private float alpha = 0.6f;
-        private float alpha_reduction_rate = 0.5f;
-        private int neighboring_radius = 1;
+        private float neighboring_radius = 1.0f;
         private int max_epoch = 200;
         private string topology = "linear"; // Can be "linear", "square", or "hexagon"
 
         private float[,] w;
-        private float[] d;
         private int iteration = 0;
         private bool stop = false;
 
@@ -22,7 +20,6 @@
             int features_count = 4,
             int clusters_count = 2,
             float alpha = 0.6f,
-            float alpha_reduction_rate = 0.5f,
             int neighboring_radius = 1,
             int max_epoch = 200,
             string topology = "linear"
@@ -32,17 +29,12 @@
             this.features_count = features_count;
             this.clusters_count = clusters_count;
             this.alpha = alpha;
-            this.alpha_reduction_rate = alpha_reduction_rate;
             this.neighboring_radius = neighboring_radius;
             this.max_epoch = max_epoch;
             this.topology = topology;
 
             w = new float[features_count, clusters_count];
-            d = new float[clusters_count];
-        }
 
-        public void Start()
-        {
             for (int i = 0; i < w.GetLength(0); i++)
             {
                 float[] random_values = GenerateRandomValues(0.1f, w.GetLength(1));
@@ -51,27 +43,32 @@
                     w[i, j] = random_values[j];
                 }
             }
+        }
+
+        public float[,] Start()
+        {
 
             while (!stop && iteration < max_epoch)
             {
                 Train();
-                alpha *= alpha_reduction_rate;
-                neighboring_radius = Math.Max(0, neighboring_radius - 1); // Reduce radius per epoch
+                alpha *= MathF.Exp((float) -iteration / max_epoch);
+                neighboring_radius *= MathF.Exp(-iteration / (max_epoch / MathF.Log2(clusters_count/2)));
+
                 iteration++;
             }
 
-            Console.WriteLine($"Iteration Count: {iteration}");
+            //Console.WriteLine($"Iteration Count: {iteration}");
 
             for (int i = 0; i < w.GetLength(0); i++)
             {
                 for (int j = 0; j < w.GetLength(1); j++)
                 {
-                    Console.Write($"{w[i, j]:N2} ");
+                    //Console.Write($"{w[i, j]:N2} ");
                 }
-                Console.WriteLine();
+                //Console.WriteLine();
             }
 
-            Evaluate();
+            return w;
         }
 
         private void Train()
@@ -83,24 +80,7 @@
             }
         }
 
-        private void Evaluate()
-        {
-            int correct_count = 0;
-            foreach (var pattern in train_patterns)
-            {
-                int assigned_cluster = GetBestMatchingUnit(pattern.inputs);
-                Console.WriteLine($"Pattern Label: {pattern.label}, Assigned Cluster: {assigned_cluster}");
-
-                if (pattern.label == assigned_cluster)
-                {
-                    correct_count++;
-                }
-            }
-
-            Console.WriteLine($"Correctly Classified: {correct_count} / {train_patterns.Count}");
-        }
-
-        private int GetBestMatchingUnit(float[] inputs)
+        public int GetBestMatchingUnit(float[] inputs)
         {
             int min_index = 0;
             float min_value = float.PositiveInfinity;

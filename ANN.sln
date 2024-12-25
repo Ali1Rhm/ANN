@@ -31,6 +31,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SOM_HWD", "SOM_HWD\SOM_HWD.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SOM_TSP", "SOM_TSP\SOM_TSP.csproj", "{B87FBC85-07DD-4946-B1E3-866CE45AEC93}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "K-means_HWD", "K-means_HWD\K-means_HWD.csproj", "{A9CECD2C-4A4F-4D1F-B310-80D99D121C5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,10 @@ Global
 		{B87FBC85-07DD-4946-B1E3-866CE45AEC93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B87FBC85-07DD-4946-B1E3-866CE45AEC93}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B87FBC85-07DD-4946-B1E3-866CE45AEC93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9CECD2C-4A4F-4D1F-B310-80D99D121C5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9CECD2C-4A4F-4D1F-B310-80D99D121C5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9CECD2C-4A4F-4D1F-B310-80D99D121C5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9CECD2C-4A4F-4D1F-B310-80D99D121C5B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

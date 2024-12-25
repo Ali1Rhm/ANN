@@ -4,7 +4,7 @@ List <(float[] inputs, float label)> train_patterns = new();
 
 var file_Path = @"C:\Dev\ANN\HWD.txt";
 
-var images = new List<float[]>();
+var digits = new List<float[]>();
 var labels = new List<float>();
 
 foreach (var line in File.ReadLines(file_Path))
@@ -18,23 +18,23 @@ foreach (var line in File.ReadLines(file_Path))
     else
     {
         var row = Array.ConvertAll(line.Trim().ToCharArray(), c => c == '1' ? 1.0f : 0.0f);
-        if (images.Count == labels.Count)
+        if (digits.Count == labels.Count)
         {
-            images.Add(row);
+            digits.Add(row);
         }
         else
         {
-            var lastImage = images[^1];
+            var lastImage = digits[^1];
             Array.Resize(ref lastImage, lastImage.Length + row.Length);
             Array.Copy(row, 0, lastImage, lastImage.Length - row.Length, row.Length);
-            images[^1] = lastImage;
+            digits[^1] = lastImage;
         }
     }
 }
 
-for(int i = 0; i < images.Count; i++)
+for(int i = 0; i < digits.Count; i++)
 {
-    train_patterns.Add((images[i], labels[i]));
+    train_patterns.Add((digits[i], labels[i]));
 }
 
 Console.WriteLine("Linear Topology:");

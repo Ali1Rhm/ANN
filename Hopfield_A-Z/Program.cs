@@ -1,15 +1,38 @@
-﻿using System;
+﻿List <(float[] inputs, char label)> train_patterns = new();
 
-List<int[]> train_patterns = new();
-train_patterns.Add(new[] { 1, -1, 1});
-train_patterns.Add(new[] { -1, 1, -1 });
+int max_line_to_read = 5;
+int line_index = 0;
+foreach (var line in File.ReadLines(@"C:\Dev\ANN\A-ZData_Train.txt"))
+{
+    line_index++;
 
-List<int[]> test_patterns = new();
-test_patterns.Add(new[] { -1, -1, 1 });
-test_patterns.Add(new[] {-1, -1, -1});
-test_patterns.Add(new[] { 1, -1, -1 });
+    string[] values = line.Split(new char[] { ' ' });
 
-int neurons_count = 3;
+    char label = char.Parse(values[^1]);
+    float[] inputs = new float[values.Length - 1];
+    for (int i = 0; i < inputs.Length; i++)
+        inputs[i] = float.Parse(values[i]);
+
+    train_patterns.Add((inputs, label));
+
+    if (line_index == max_line_to_read)
+        break;
+}
+
+List<(float[] inputs, char label)> test_patterns = new();
+foreach (var line in File.ReadLines(@"C:\Dev\ANN\A-ZData_Noise.txt"))
+{
+    string[] values = line.Split(new char[] { ' ' });
+
+    char label = char.Parse(values[^1]);
+    float[] inputs = new float[values.Length - 1];
+    for (int i = 0; i < inputs.Length; i++)
+        inputs[i] = float.Parse(values[i]);
+
+    test_patterns.Add((inputs, label));
+}
+
+int neurons_count = 100;
 float[] y = new float[neurons_count];
 float[,] w = new float[neurons_count, neurons_count];
 
@@ -24,7 +47,7 @@ for (int i = 0; i < w.GetLength(0); i++)
         }
 
         foreach (var pattern in train_patterns)
-            w[i, j] += pattern[i] * pattern[j];
+            w[i, j] += pattern.inputs[i] * pattern.inputs[j];
         w[i, j] /= neurons_count;
     }
 }
@@ -35,8 +58,8 @@ for (int i = 0; i < indexes.Length; i++)
 
 foreach (var pattern in train_patterns)
 {
-    for (int i = 0; i < pattern.Length; i++)
-        y[i] = pattern[i];
+    for (int i = 0; i < pattern.inputs.Length; i++)
+        y[i] = pattern.inputs[i];
 
     indexes = indexes.OrderBy(x => Random.Shared.Next()).ToArray();
     for (int i = 0; i < neurons_count; i++)
@@ -46,7 +69,7 @@ foreach (var pattern in train_patterns)
         {
             y_ni += y[j] * w[i, j];
         }
-        y[indexes[i]] = Math.Sign(y_ni);
+        y[indexes[i]] = MathF.Sign(y_ni);
     }
 }
 
@@ -54,13 +77,13 @@ Console.WriteLine("Test:");
 
 foreach (var pattern in test_patterns)
 {
-    for (int i = 0; i < pattern.Length; i++)
+    for (int i = 0; i < pattern.inputs.Length; i++)
     {
-        y[i] = pattern[i];
-        Console.Write(y[i] + " ");
+        y[i] = pattern.inputs[i];
     }
 
-    Console.Write("==> ");
+    Console.Write(pattern.label + " ==> ");
+
     for (int i = 0; i < neurons_count; i++)
     {
         float y_ni = y[i];
@@ -68,8 +91,28 @@ foreach (var pattern in test_patterns)
         {
             y_ni += y[j] * w[i, j];
         }
-        y[i] = Math.Sign(y_ni);
-        Console.Write(y[i] + " ");
+        y[i] = MathF.Sign(y_ni);
     }
+
+    foreach (var saved_pattern in train_patterns)
+    {
+        bool equal = true;
+        for (int i = 0; i < saved_pattern.inputs.Length; i++)
+        {
+            if (saved_pattern.inputs[i] != y[i])
+                equal = false;
+        }
+
+        if (equal)
+        {
+            Console.Write(saved_pattern.label);
+            break;
+        }
+        else if (train_patterns.IndexOf(saved_pattern) == train_patterns.Count - 1)
+        {
+            Console.Write("Not Found");
+        }
+    }
+
     Console.WriteLine();
 }

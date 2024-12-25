@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.Metrics;
-using Pattern = (float[] inputs, float label);
+﻿using Pattern = (float[] inputs, float label);
 
 #region Load HWD Data
 List<Pattern> train_patterns = new();
